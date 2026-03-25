@@ -260,7 +260,7 @@ def match_year_bucket(date_value, bucket):
     return False
 
 
-st.set_page_config(page_title="CineMatch", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="CineMatch", layout="wide")
 
 movies, similarity = load_data()
 
@@ -303,6 +303,39 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
+    #MainMenu {{
+        visibility: hidden;
+    }}
+
+    header {{
+        visibility: hidden;
+        height: 0px;
+    }}
+
+    footer {{
+        visibility: hidden;
+    }}
+
+    [data-testid="stToolbar"] {{
+        display: none !important;
+    }}
+
+    [data-testid="stDecoration"] {{
+        display: none !important;
+    }}
+
+    [data-testid="collapsedControl"] {{
+        display: none !important;
+    }}
+
+    [data-testid="stStatusWidget"] {{
+        display: none !important;
+    }}
+
+    .stAppDeployButton {{
+        display: none !important;
+    }}
+
     html, body, [class*="css"] {{
         font-family: 'Outfit', sans-serif;
     }}
@@ -316,14 +349,12 @@ st.markdown(
         background-attachment: fixed;
     }}
 
-    .main .block-container {{
-        max-width: 1320px;
-        padding-top: 0.7rem;
-        padding-bottom: 1rem;
-    }}
-
-    [data-testid="stHeader"] {{
-        background: transparent;
+    .block-container {{
+        max-width: 1320px !important;
+        padding-top: 2rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        padding-bottom: 1rem !important;
     }}
 
     .title-main {{
@@ -480,15 +511,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-header_left, header_right = st.columns([5.4, 1], gap="medium")
+header_left, header_right = st.columns([6, 1], gap="medium")
 
 with header_left:
     st.markdown('<div class="title-main">CineMatch</div>', unsafe_allow_html=True)
     st.markdown('<div class="title-sub">Find your next favorite movie instantly</div>', unsafe_allow_html=True)
 
 with header_right:
-    st.markdown("##### &nbsp;", unsafe_allow_html=True)
-    st.caption("Premium View")
+    st.empty()
 
 st.write("")
 
@@ -565,7 +595,8 @@ with main_left:
 
     st.write("")
 
-    action_cols = st.columns([1.1, 1.1, 1.5], gap="medium")
+    action_cols = st.columns([1.1, 1.1, 1.1, 1.5], gap="medium")
+
     with action_cols[0]:
         if st.button("Discover Similar", use_container_width=True):
             ph = st.empty()
@@ -592,6 +623,16 @@ with main_left:
             st.button("No Trailer", disabled=True, use_container_width=True)
 
     with action_cols[2]:
+        if st.button("Add To Watchlist", use_container_width=True):
+            if st.session_state.selected_movie not in st.session_state.watchlist:
+                st.session_state.watchlist.append(st.session_state.selected_movie)
+                save_watchlist(st.session_state.watchlist)
+                st.toast("Saved to watchlist")
+                st.rerun()
+            else:
+                st.warning("Already in watchlist")
+
+    with action_cols[3]:
         choice = st.selectbox(
             "Jump to another title",
             movies["title"].values,
@@ -621,22 +662,6 @@ with main_left:
     with info_cols_2[2]:
         st.markdown(f'<div class="metric-box"><div class="metric-label">Languages</div><div class="metric-value">{current_info["languages_text"]}</div></div>', unsafe_allow_html=True)
 
-    st.write("")
-
-    filter_cols = st.columns(6, gap="small")
-    with filter_cols[0]:
-        st.selectbox("Browse", ["All", "Movies", "Top Picks", "Watchlist"], key="browse_mode")
-    with filter_cols[1]:
-        st.selectbox("Genre", ["All", "Action", "Adventure", "Comedy", "Drama", "Fantasy", "Sci-Fi", "Thriller", "Crime", "Family", "Mystery", "Romance"], key="genre_filter")
-    with filter_cols[2]:
-        st.selectbox("Year", ["All", "2020s", "2010s", "2000s", "1990s", "1980s"], key="year_filter")
-    with filter_cols[3]:
-        st.selectbox("Language", ["All", "English", "Spanish", "French", "Hindi", "Korean"], key="language_filter")
-    with filter_cols[4]:
-        st.selectbox("Sort By", ["Similarity", "IMDb", "Popularity", "Title"], key="sort_by")
-    with filter_cols[5]:
-        st.selectbox("Sort", ["Descending", "Ascending"], key="sort_order")
-
 with main_right:
     st.markdown('<div class="small-title">Genre Tags</div>', unsafe_allow_html=True)
     genre_tags = get_genre_tag_list()
@@ -651,23 +676,6 @@ with main_right:
     if st.button("Clear Genre", use_container_width=True):
         st.session_state.genre_filter = "All"
         st.rerun()
-
-    st.write("")
-
-    st.markdown('<div class="small-title">Quick Access</div>', unsafe_allow_html=True)
-    if st.button("Surprise Me", use_container_width=True):
-        random_pick = movies.sample(1)["title"].values[0]
-        set_selected_movie(random_pick)
-        st.rerun()
-
-    if st.button("Add To Watchlist", use_container_width=True):
-        if st.session_state.selected_movie not in st.session_state.watchlist:
-            st.session_state.watchlist.append(st.session_state.selected_movie)
-            save_watchlist(st.session_state.watchlist)
-            st.toast("Saved to watchlist")
-            st.rerun()
-        else:
-            st.warning("Already in watchlist")
 
     st.write("")
 
@@ -689,6 +697,22 @@ with main_right:
 
 st.write("")
 st.markdown('<div class="small-title">Recommended For You</div>', unsafe_allow_html=True)
+
+filter_cols = st.columns(6, gap="small")
+with filter_cols[0]:
+    st.selectbox("Browse", ["All", "Movies", "Top Picks", "Watchlist"], key="browse_mode")
+with filter_cols[1]:
+    st.selectbox("Genre", ["All", "Action", "Adventure", "Comedy", "Drama", "Fantasy", "Sci-Fi", "Thriller", "Crime", "Family", "Mystery", "Romance"], key="genre_filter")
+with filter_cols[2]:
+    st.selectbox("Year", ["All", "2020s", "2010s", "2000s", "1990s", "1980s"], key="year_filter")
+with filter_cols[3]:
+    st.selectbox("Language", ["All", "English", "Spanish", "French", "Hindi", "Korean"], key="language_filter")
+with filter_cols[4]:
+    st.selectbox("Sort By", ["Similarity", "IMDb", "Popularity", "Title"], key="sort_by")
+with filter_cols[5]:
+    st.selectbox("Sort", ["Descending", "Ascending"], key="sort_order")
+
+st.write("")
 
 if st.session_state.get("rec_names"):
     names = st.session_state.rec_names
@@ -787,4 +811,4 @@ if st.session_state.get("rec_names"):
 else:
     st.info("Search or select a movie first, then click 'Discover Similar' to view recommendations.")
 
-st.markdown('<div class="footer-note">CineMatch • Premium cleaned layout with improved alignment and spacing.</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer-note">CineMatch • Cleaner, simpler, and focused on movie recommendation functionality.</div>', unsafe_allow_html=True)
